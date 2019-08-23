@@ -12,6 +12,11 @@ namespace YesSql.Commands
 
         public override int ExecutionOrder { get; } = 0;
 
+        public CreateDocumentCommand(string tablePrefix) 
+        {
+            _tablePrefix = tablePrefix;
+        }
+
         public CreateDocumentCommand(Document document, string tablePrefix) : base(document)
         {
             _tablePrefix = tablePrefix;
@@ -24,7 +29,15 @@ namespace YesSql.Commands
 
             logger.LogTrace(insertCmd);
 
-            return connection.ExecuteScalarAsync<int>(insertCmd, Document, transaction);
+            if (Document != null)
+            {
+                return connection.ExecuteScalarAsync<int>(insertCmd, Document, transaction);
+            }
+            else
+            {
+                return connection.ExecuteScalarAsync<int>(insertCmd, GetDocuments(), transaction);
+            }
+
         }
     }
 }

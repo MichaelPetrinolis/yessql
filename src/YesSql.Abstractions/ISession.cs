@@ -51,7 +51,7 @@ namespace YesSql
         IQuery Query();
 
         IQuery<T> ExecuteQuery<T>(ICompiledQuery<T> compiledQuery) where T : class;
-        
+
         /// <summary>
         /// Cancels any pending commands.
         /// </summary>
@@ -64,7 +64,7 @@ namespace YesSql
         /// This doesn't commit or dispose of the transaction. A call to <see cref="CommitAsync"/>
         /// is still necessary for the changes to be visible from other transactions.
         /// </remarks>
-        Task FlushAsync();
+        Task FlushAsync(int batchSize = 0);
 
         /// <summary>
         /// Fluses any changes and commits the transaction, and disposes it.
@@ -74,7 +74,7 @@ namespace YesSql
         /// is recommended before the session is disposed to prevent it from being called on a non-async
         /// code path.
         /// </remarks>
-        Task CommitAsync();
+        Task CommitAsync(int batchSize = 0);
 
         /// <summary>
         /// Returns a <see cref="DbTransaction"/> that is used by this instance.

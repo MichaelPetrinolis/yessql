@@ -10,22 +10,22 @@ using YesSql.Sql;
 
 namespace YesSql.Samples.Performance
 {
-    [ClrJob, CoreJob]
+    [CoreJob]
     public class Benchmarks
     {
         IStore _store;
 
         public Benchmarks()
         {
-            InitializeAsync().GetAwaiter().GetResult();
+            InitAsync().GetAwaiter().GetResult();
         }
 
-        private async Task InitializeAsync()
+        private async Task InitAsync()
         {
             var configuration = new Configuration()
-                    .UseSqlServer(@"Data Source =.; Initial Catalog = yessql; Integrated Security = True")
+                    .UseSqlServer(@"Data Source =sqlsrv2016; Initial Catalog = Vendd6.OMNITest; Integrated Security = True")
                     .SetTablePrefix("Performance");
-            
+
             try
             {
                 using (var connection = configuration.ConnectionFactory.CreateConnection())
@@ -36,7 +36,7 @@ namespace YesSql.Samples.Performance
                     {
                         new SchemaBuilder(configuration, transaction)
                         .DropTable("UserByName")
-                        .DropTable("Identifiers")
+                        //.DropTable("Identifiers")
                         .DropTable("Document");
 
                         transaction.Commit();
@@ -65,133 +65,135 @@ namespace YesSql.Samples.Performance
             }
 
             _store.RegisterIndexes<UserIndexProvider>();
+
             await CleanAsync();
+        }
 
+        [Benchmark]
+        public async Task WriteUsers()
+        {
             await CreateUsersAsync();
-
-            // pre initialize configuration
-            _store.CreateSession().Dispose();
-
             await WriteAllWithYesSql();
         }
 
-        [Benchmark]
-        public async Task<IEnumerable<UserByName>> QueryIndexByFullName1()
-        {
-            var rnd = new Random();
-            var names = Enumerable.Range(1, 1).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
 
-            using (var session = _store.CreateSession())
-            {
-                return await session.QueryIndex<UserByName>(x => x.Name.IsIn(names)).ListAsync();
-            }
-        }
+        //[Benchmark]
+        //public async Task<IEnumerable<UserByName>> QueryIndexByFullName1()
+        //{
+        //    var rnd = new Random();
+        //    var names = Enumerable.Range(1, 1).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
 
-        [Benchmark]
-        public async Task<IEnumerable<UserByName>> QueryIndexByFullName10()
-        {
-            var rnd = new Random();
-            var names = Enumerable.Range(1, 10).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
+        //    using (var session = _store.CreateSession())
+        //    {
+        //        return await session.QueryIndex<UserByName>(x => x.Name.IsIn(names)).ListAsync();
+        //    }
+        //}
 
-            using (var session = _store.CreateSession())
-            {
-                return await session.QueryIndex<UserByName>(x => x.Name.IsIn(names)).ListAsync();
-            }
-        }
+        //[Benchmark]
+        //public async Task<IEnumerable<UserByName>> QueryIndexByFullName10()
+        //{
+        //    var rnd = new Random();
+        //    var names = Enumerable.Range(1, 10).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
 
-        [Benchmark]
-        public async Task<IEnumerable<UserByName>> QueryIndexByFullName100()
-        {
-            var rnd = new Random();
-            var names = Enumerable.Range(1, 100).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
+        //    using (var session = _store.CreateSession())
+        //    {
+        //        return await session.QueryIndex<UserByName>(x => x.Name.IsIn(names)).ListAsync();
+        //    }
+        //}
 
-            using (var session = _store.CreateSession())
-            {
-                return await session.QueryIndex<UserByName>(x => x.Name.IsIn(names)).ListAsync();
-            }
-        }
+        //[Benchmark]
+        //public async Task<IEnumerable<UserByName>> QueryIndexByFullName100()
+        //{
+        //    var rnd = new Random();
+        //    var names = Enumerable.Range(1, 100).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
 
-        [Benchmark]
-        public async Task<IEnumerable<User>> QueryByFullName1()
-        {
-            var rnd = new Random();
-            var names = Enumerable.Range(1, 1).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
+        //    using (var session = _store.CreateSession())
+        //    {
+        //        return await session.QueryIndex<UserByName>(x => x.Name.IsIn(names)).ListAsync();
+        //    }
+        //}
 
-            using (var session = _store.CreateSession())
-            {
-                return await session.Query<User, UserByName>(x => x.Name.IsIn(names)).ListAsync();
-            }
-        }
+        //[Benchmark]
+        //public async Task<IEnumerable<User>> QueryByFullName1()
+        //{
+        //    var rnd = new Random();
+        //    var names = Enumerable.Range(1, 1).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
 
-        [Benchmark]
-        public async Task<IEnumerable<User>> QueryByFullName10()
-        {
-            var rnd = new Random();
-            var names = Enumerable.Range(1, 10).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
+        //    using (var session = _store.CreateSession())
+        //    {
+        //        return await session.Query<User, UserByName>(x => x.Name.IsIn(names)).ListAsync();
+        //    }
+        //}
 
-            using (var session = _store.CreateSession())
-            {
-                return await session.Query<User, UserByName>(x => x.Name.IsIn(names)).ListAsync();
-            }
-        }
+        //[Benchmark]
+        //public async Task<IEnumerable<User>> QueryByFullName10()
+        //{
+        //    var rnd = new Random();
+        //    var names = Enumerable.Range(1, 10).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
 
-        [Benchmark]
-        public async Task<IEnumerable<User>> QueryByFullName100()
-        {
-            var rnd = new Random();
-            var names = Enumerable.Range(1, 100).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
+        //    using (var session = _store.CreateSession())
+        //    {
+        //        return await session.Query<User, UserByName>(x => x.Name.IsIn(names)).ListAsync();
+        //    }
+        //}
 
-            using (var session = _store.CreateSession())
-            {
-                return await session.Query<User, UserByName>(x => x.Name.IsIn(names)).ListAsync();
-            }
-        }
+        //[Benchmark]
+        //public async Task<IEnumerable<User>> QueryByFullName100()
+        //{
+        //    var rnd = new Random();
+        //    var names = Enumerable.Range(1, 100).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
 
-        [Benchmark]
-        public ISession CreateSession()
-        {
-            using (var session = _store.CreateSession())
-            {
-                return session;
-            }
-        }
+        //    using (var session = _store.CreateSession())
+        //    {
+        //        return await session.Query<User, UserByName>(x => x.Name.IsIn(names)).ListAsync();
+        //    }
+        //}
 
-        [Benchmark]
-        public async Task<IEnumerable<UserByName>> QuerySql()
-        {
-            var rnd = new Random();
-            var names = Enumerable.Range(1, 1).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
+        //[Benchmark]
+        //public ISession CreateSession()
+        //{
+        //    using (var session = _store.CreateSession())
+        //    {
+        //        return session;
+        //    }
+        //}
 
-            using (var session = _store.CreateSession())
-            {
-                return await session.QueryIndex<UserByName>().Where("Name = '" + names[0] + "'").ListAsync();
-            }
-        }
+        //[Benchmark]
+        //public async Task<IEnumerable<UserByName>> QuerySql()
+        //{
+        //    var rnd = new Random();
+        //    var names = Enumerable.Range(1, 1).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
 
-        [Benchmark]
-        public async Task<IEnumerable<UserByName>> QueryParameterizedSql()
-        {
-            var rnd = new Random();
-            var names = Enumerable.Range(1, 1).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
+        //    using (var session = _store.CreateSession())
+        //    {
+        //        return await session.QueryIndex<UserByName>().Where("Name = '" + names[0] + "'").ListAsync();
+        //    }
+        //}
 
-            using (var session = _store.CreateSession())
-            {
-                return await session.QueryIndex<UserByName>().Where("Name = @Name").WithParameter("Name", names[0]).ListAsync();
-            }
-        }
+        //[Benchmark]
+        //public async Task<IEnumerable<UserByName>> QueryParameterizedSql()
+        //{
+        //    var rnd = new Random();
+        //    var names = Enumerable.Range(1, 1).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
 
-        [Benchmark]
-        public async Task<IEnumerable<UserByName>> QueryLinq()
-        {
-            var rnd = new Random();
-            var names = Enumerable.Range(1, 1).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
+        //    using (var session = _store.CreateSession())
+        //    {
+        //        return await session.QueryIndex<UserByName>().Where("Name = @Name").WithParameter("Name", names[0]).ListAsync();
+        //    }
+        //}
 
-            using (var session = _store.CreateSession())
-            {
-                return await session.QueryIndex<UserByName>(x => x.Name == names[0]).ListAsync();
-            }
-        }
-        
+        //[Benchmark]
+        //public async Task<IEnumerable<UserByName>> QueryLinq()
+        //{
+        //    var rnd = new Random();
+        //    var names = Enumerable.Range(1, 1).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
+
+        //    using (var session = _store.CreateSession())
+        //    {
+        //        return await session.QueryIndex<UserByName>(x => x.Name == names[0]).ListAsync();
+        //    }
+        //}
+
         private async Task CleanAsync()
         {
             using (var session = _store.CreateSession())
@@ -249,7 +251,8 @@ namespace YesSql.Samples.Performance
                 if (batch % batchSize == 0)
                 {
                     users.ForEach(u => session.Save(u));
-                    await session.CommitAsync();
+                    await session.CommitAsync(batchSize);
+                    Console.WriteLine($"{i} saved in Ellapsed {sp.ElapsedMilliseconds}");
                     session.Dispose();
                     session = _store.CreateSession();
                     users = new List<User>();

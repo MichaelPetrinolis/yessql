@@ -1,6 +1,7 @@
 using Dapper;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -189,6 +190,61 @@ namespace YesSql
             await MapNew(doc, entity);
         }
 
+        private async Task SaveEntitiesAsync(IEnumerable entities)
+        {
+            if (entities == null)
+            {
+                throw new ArgumentNullException("obj");
+            }
+
+            foreach (var entity in entities)
+            {
+                if (entity is Document document)
+                {
+                    throw new ArgumentException("A document should not be saved explicitely");
+                }
+
+                if (entity is IIndex index)
+                {
+                    throw new ArgumentException("An index should not be saved explicitely");
+                }
+            }
+
+
+            var command = new CreateDocumentCommand(_tablePrefix);
+
+            foreach (var entity in entities)
+            {
+
+                var doc = new Document
+                {
+                    Type = Store.TypeNames[entity.GetType()]
+                };
+
+                if (!_identityMap.TryGetDocumentId(entity, out var id))
+                {
+                    throw new InvalidOperationException("The object to save was not found in identity map.");
+                }
+
+                doc.Id = id;
+
+                doc.Content = Store.Configuration.ContentSerializer.Serialize(entity);
+
+                command.AddDocument(doc, entity);
+
+            }
+
+            await DemandAsync();
+            await command.ExecuteAsync(_connection, _transaction, _dialect, Store.Configuration.Logger);
+
+
+            foreach (var item in command.GetDocumentsMap())
+            {
+                await MapNew(item.Key, item.Value);
+            }
+
+        }
+
         private async Task UpdateEntityAsync(object entity)
         {
             if (entity == null)
@@ -273,7 +329,7 @@ namespace YesSql
                 Cancel();
 
                 throw;
-            }            
+            }
         }
 
         public void Delete(object obj)
@@ -472,7 +528,7 @@ namespace YesSql
             // Do nothing if Dispose() was already called
             if (_disposed)
             {
-                return; 
+                return;
             }
 
             try
@@ -547,7 +603,7 @@ namespace YesSql
             _isolationLevel = isolationLevel;
         }
 
-        public async Task FlushAsync()
+        public async Task FlushAsync(int batchSize = 0)
         {
             if (!HasWork())
             {
@@ -580,11 +636,25 @@ namespace YesSql
                         await UpdateEntityAsync(obj);
                     }
                 }
-
+                var batch = new ArrayList();
+                int iix = 0;
                 // saving all pending entities
                 foreach (var obj in _saved)
                 {
-                    await SaveEntityAsync(obj);
+                    iix++;
+                    if (batchSize > 0)
+                    {
+                        batch.Add(obj);
+                        if (iix % batchSize == 0)
+                        {
+                            await SaveEntitiesAsync(batch);
+                            batch.Clear();
+                        }
+                    }
+                    else
+                    {
+                        await SaveEntityAsync(obj);
+                    }
                 }
 
                 // deleting all pending entities
@@ -620,13 +690,13 @@ namespace YesSql
             }
         }
 
-        public async Task CommitAsync()
+        public async Task CommitAsync(int batchSize = 0)
         {
             try
             {
                 if (!_cancel)
                 {
-                    await FlushAsync();
+                    await FlushAsync(batchSize);
                 }
             }
             finally
