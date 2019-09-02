@@ -48,13 +48,13 @@ namespace YesSql.Commands
             }
         }
 
-        public IEnumerable<Document> GetDocuments()
+        public IEnumerable<dynamic> GetDocuments()
         {
             using (var enumerator = _documents.Keys.GetEnumerator())
             {
                 while (enumerator.MoveNext())
                 {
-                    yield return enumerator.Current;
+                    yield return new { enumerator.Current.Id, enumerator.Current.Type, enumerator.Current.Content };
                 }
             }
         }

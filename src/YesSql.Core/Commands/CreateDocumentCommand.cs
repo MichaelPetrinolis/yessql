@@ -1,5 +1,6 @@
 using Dapper;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Data.Common;
 using System.Threading.Tasks;
 using YesSql.Collections;
@@ -29,13 +30,19 @@ namespace YesSql.Commands
 
             logger.LogTrace(insertCmd);
 
+            var flags= CommandFlags.None;
+            if (connection.ConnectionString.ToLowerInvariant().Trim().Contains("multipleactiveresultsets=true"))
+            {
+                flags = CommandFlags.Pipelined;
+            }
+
             if (Document != null)
             {
-                return connection.ExecuteScalarAsync<int>(insertCmd, Document, transaction);
+                return connection.ExecuteScalarAsync<int>(new CommandDefinition(insertCmd, Document, transaction, flags: flags));
             }
             else
             {
-                return connection.ExecuteAsync(insertCmd, GetDocuments(), transaction);
+                return connection.ExecuteAsync(new CommandDefinition(insertCmd, GetDocuments(), transaction, flags: flags));
             }
 
         }

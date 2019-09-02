@@ -32,10 +32,17 @@ namespace YesSql.Commands
             {
                 var sql = Inserts(type, dialect) + " " + dialect.IdentitySelectString + " " + dialect.QuoteForColumnName("Id");
                 logger.LogTrace(sql);
-                Index.Id = await connection.ExecuteScalarAsync<int>(sql, Index, transaction);
+
+                var flags = CommandFlags.None;
+                if (connection.ConnectionString.ToLowerInvariant().Trim().Contains("multipleactiveresultsets=true"))
+                {
+                    flags = CommandFlags.Pipelined;
+                }
+
+                Index.Id = await connection.ExecuteScalarAsync<int>(new CommandDefinition(sql, Index, transaction, flags: flags));
                 var command = "update " + dialect.QuoteForTableName(_tablePrefix + type.Name) + " set " + dialect.QuoteForColumnName("DocumentId") + " = @mapid where " + dialect.QuoteForColumnName("Id") + " = @Id";
                 logger.LogTrace(command);
-                await connection.ExecuteAsync(command, new { mapid = Index.GetAddedDocuments().Single().Id, Id = Index.Id }, transaction);
+                await connection.ExecuteAsync(new CommandDefinition(command, new { mapid = Index.GetAddedDocuments().Single().Id, Id = Index.Id }, transaction, flags: flags));
             }
             else
             {
@@ -46,7 +53,7 @@ namespace YesSql.Commands
                 Index.Id = await connection.ExecuteScalarAsync<int>(sql, Index, transaction);
 
                 var bridgeTableName = type.Name + "_" + documentTable;
-                var columnList = dialect.QuoteForColumnName(type.Name + "Id") +", " + dialect.QuoteForColumnName("DocumentId");
+                var columnList = dialect.QuoteForColumnName(type.Name + "Id") + ", " + dialect.QuoteForColumnName("DocumentId");
                 var bridgeSql = "insert into " + dialect.QuoteForTableName(_tablePrefix + bridgeTableName) + " (" + columnList + ") values (@Id, @DocumentId);";
                 logger.LogTrace(bridgeSql);
                 await connection.ExecuteAsync(bridgeSql, _addedDocumentIds.Select(x => new { DocumentId = x, Id = Index.Id }), transaction);

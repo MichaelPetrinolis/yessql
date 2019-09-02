@@ -1,30 +1,56 @@
-using BenchmarkDotNet.Attributes;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using YesSql.Provider.SqlServer;
-using YesSql.Services;
 using YesSql.Sql;
 
 namespace YesSql.Samples.Performance
 {
-    [CoreJob]
-    public class Benchmarks
+    public abstract class YesSqlBenchmarks
     {
-        IStore _store;
+        protected IStore _store;
+        readonly string _connectionString;
 
-        public Benchmarks()
+        public YesSqlBenchmarks(string connectionString)
+        {
+            _connectionString = connectionString;
+        }
+
+        protected virtual IConfiguration GetConfiguration()
+        {
+            return new Configuration()
+                    .UseSqlServer(_connectionString);
+        }
+
+        protected void Clean()
+        {
+            CleanAsync().GetAwaiter().GetResult();
+        }
+
+        protected async Task CleanAsync()
+        {
+            using (var session = _store.CreateSession())
+            {
+                var documents = await session.Query().For<User>().ListAsync();
+                foreach (var document in documents)
+                {
+                    session.Delete(document);
+                }
+            }
+        }
+
+        protected void Init()
         {
             InitAsync().GetAwaiter().GetResult();
         }
 
-        private async Task InitAsync()
+        protected async Task InitAsync()
         {
-            var configuration = new Configuration()
-                    .UseSqlServer(@"Data Source =sqlsrv2016; Initial Catalog = Vendd6.OMNITest; Integrated Security = True")
-                    .SetTablePrefix("Performance");
+            var configuration = GetConfiguration();
+
+            configuration.SetTablePrefix("Performance");
 
             try
             {
@@ -45,7 +71,7 @@ namespace YesSql.Samples.Performance
             }
             catch { }
 
-            _store = await StoreFactory.CreateAsync(configuration);
+            _store = StoreFactory.CreateAsync(configuration).GetAwaiter().GetResult();
 
             using (var connection = configuration.ConnectionFactory.CreateConnection())
             {
@@ -67,177 +93,22 @@ namespace YesSql.Samples.Performance
             _store.RegisterIndexes<UserIndexProvider>();
 
             await CleanAsync();
+
+            // pre initialize configuration
+            _store.CreateSession().Dispose();
         }
 
-        [Benchmark]
-        public async Task WriteUsers()
+        protected void CreateUsers(int batchSize)
         {
-            await CreateUsersAsync();
-            await WriteAllWithYesSql();
+            CreateUsersAsync(batchSize).GetAwaiter().GetResult();
         }
 
-
-        //[Benchmark]
-        //public async Task<IEnumerable<UserByName>> QueryIndexByFullName1()
-        //{
-        //    var rnd = new Random();
-        //    var names = Enumerable.Range(1, 1).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
-
-        //    using (var session = _store.CreateSession())
-        //    {
-        //        return await session.QueryIndex<UserByName>(x => x.Name.IsIn(names)).ListAsync();
-        //    }
-        //}
-
-        //[Benchmark]
-        //public async Task<IEnumerable<UserByName>> QueryIndexByFullName10()
-        //{
-        //    var rnd = new Random();
-        //    var names = Enumerable.Range(1, 10).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
-
-        //    using (var session = _store.CreateSession())
-        //    {
-        //        return await session.QueryIndex<UserByName>(x => x.Name.IsIn(names)).ListAsync();
-        //    }
-        //}
-
-        //[Benchmark]
-        //public async Task<IEnumerable<UserByName>> QueryIndexByFullName100()
-        //{
-        //    var rnd = new Random();
-        //    var names = Enumerable.Range(1, 100).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
-
-        //    using (var session = _store.CreateSession())
-        //    {
-        //        return await session.QueryIndex<UserByName>(x => x.Name.IsIn(names)).ListAsync();
-        //    }
-        //}
-
-        //[Benchmark]
-        //public async Task<IEnumerable<User>> QueryByFullName1()
-        //{
-        //    var rnd = new Random();
-        //    var names = Enumerable.Range(1, 1).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
-
-        //    using (var session = _store.CreateSession())
-        //    {
-        //        return await session.Query<User, UserByName>(x => x.Name.IsIn(names)).ListAsync();
-        //    }
-        //}
-
-        //[Benchmark]
-        //public async Task<IEnumerable<User>> QueryByFullName10()
-        //{
-        //    var rnd = new Random();
-        //    var names = Enumerable.Range(1, 10).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
-
-        //    using (var session = _store.CreateSession())
-        //    {
-        //        return await session.Query<User, UserByName>(x => x.Name.IsIn(names)).ListAsync();
-        //    }
-        //}
-
-        //[Benchmark]
-        //public async Task<IEnumerable<User>> QueryByFullName100()
-        //{
-        //    var rnd = new Random();
-        //    var names = Enumerable.Range(1, 100).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
-
-        //    using (var session = _store.CreateSession())
-        //    {
-        //        return await session.Query<User, UserByName>(x => x.Name.IsIn(names)).ListAsync();
-        //    }
-        //}
-
-        //[Benchmark]
-        //public ISession CreateSession()
-        //{
-        //    using (var session = _store.CreateSession())
-        //    {
-        //        return session;
-        //    }
-        //}
-
-        //[Benchmark]
-        //public async Task<IEnumerable<UserByName>> QuerySql()
-        //{
-        //    var rnd = new Random();
-        //    var names = Enumerable.Range(1, 1).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
-
-        //    using (var session = _store.CreateSession())
-        //    {
-        //        return await session.QueryIndex<UserByName>().Where("Name = '" + names[0] + "'").ListAsync();
-        //    }
-        //}
-
-        //[Benchmark]
-        //public async Task<IEnumerable<UserByName>> QueryParameterizedSql()
-        //{
-        //    var rnd = new Random();
-        //    var names = Enumerable.Range(1, 1).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
-
-        //    using (var session = _store.CreateSession())
-        //    {
-        //        return await session.QueryIndex<UserByName>().Where("Name = @Name").WithParameter("Name", names[0]).ListAsync();
-        //    }
-        //}
-
-        //[Benchmark]
-        //public async Task<IEnumerable<UserByName>> QueryLinq()
-        //{
-        //    var rnd = new Random();
-        //    var names = Enumerable.Range(1, 1).Select(x => Names[rnd.Next(Names.Length - 1)]).ToArray();
-
-        //    using (var session = _store.CreateSession())
-        //    {
-        //        return await session.QueryIndex<UserByName>(x => x.Name == names[0]).ListAsync();
-        //    }
-        //}
-
-        private async Task CleanAsync()
+        protected async Task CreateUsersAsync(int batchSize)
         {
-            using (var session = _store.CreateSession())
-            {
-                var documents = await session.Query().For<User>().ListAsync();
-                foreach (var document in documents)
-                {
-                    session.Delete(document);
-                }
-            }
-        }
-
-        public async Task WriteAllWithYesSql()
-        {
-            int batch = 0, batchSize = 128;
-            var session = _store.CreateSession();
-            foreach (var name in Names)
-            {
-                batch++;
-                session.Save(new User
-                {
-                    Email = name + "@" + name + ".name",
-                    Name = name
-                });
-
-                if (batch % batchSize == 0)
-                {
-                    session.Dispose();
-                    session = _store.CreateSession();
-                }
-            }
-
-            await session.CommitAsync();
-
-            session.Dispose();
-        }
-
-        public async Task CreateUsersAsync()
-        {
-            int batch = 0, batchSize = 128, i = 0;
+            int batch = 0, i = 0;
             var session = _store.CreateSession();
             var users = new List<User>();
 
-            var sp = Stopwatch.StartNew();
             foreach (var name in Names)
             {
                 batch++; i++;
@@ -248,25 +119,25 @@ namespace YesSql.Samples.Performance
                     Name = name
                 });
 
-                if (batch % batchSize == 0)
+                if (batchSize == 0 || batch % batchSize == 0)
                 {
                     users.ForEach(u => session.Save(u));
-                    await session.CommitAsync(batchSize);
-                    Console.WriteLine($"{i} saved in Ellapsed {sp.ElapsedMilliseconds}");
+                    await session.CommitAsync(batchSize < 0 ? 0 : batchSize);
                     session.Dispose();
                     session = _store.CreateSession();
                     users = new List<User>();
+                    batch = 0;
                 }
             }
 
             users.ForEach(u => session.Save(u));
-            await session.CommitAsync();
+            await session.CommitAsync(batchSize > 0 ? batch : 0);
             session.Dispose();
             session = _store.CreateSession();
         }
 
         #region Names
-        private static readonly string[] Names = new[]
+        protected static readonly string[] Names = new[]
         {
             "MARY", "PATRICIA", "LINDA", "BARBARA", "ELIZABETH", "JENNIFER", "MARIA", "SUSAN", "MARGARET", "DOROTHY", "LISA",
             "NANCY", "KAREN", "BETTY", "HELEN", "SANDRA", "DONNA", "CAROL", "RUTH", "SHARON", "MICHELLE", "LAURA", "SARAH",
@@ -722,5 +593,6 @@ namespace YesSql.Samples.Performance
             "VINCENZO", "SHON", "LYNWOOD", "JERE", "HAI", "ELDEN", "DORSEY", "DARELL", "BRODERICK", "ALONSO"
         };
         #endregion
+
     }
 }
