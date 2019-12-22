@@ -2,19 +2,19 @@ using System;
 using System.Data.Common;
 using System.Threading.Tasks;
 using Xunit;
-using YesSql.Provider.PostgreSql;
+using YesSql.Provider.PostgresJson;
 using YesSql.Sql;
 
 namespace YesSql.Tests
 {
-    public class PostgreSqlTests : CoreTests
+    public class PostgresJsonTests : CoreTests
     {
         public static string ConnectionString => Environment.GetEnvironmentVariable("POSTGRESQL_CONNECTION_STRING") ?? @"Server=postgres;Port=5432;Database=yessql;User Id=vendallion;Password=vendallionpwd;";
 
         protected override IConfiguration CreateConfiguration()
         {
             return new Configuration()
-                .UsePostgreSql(ConnectionString)
+                .UsePostgresJson(ConnectionString)
                 .SetTablePrefix(TablePrefix)
                 .UseBlockIdGenerator()
                 ;

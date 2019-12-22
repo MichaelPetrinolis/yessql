@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using YesSql.Provider.SqlServer;
+using YesSql.Provider.PostgresJson;
 using YesSql.Services;
 using YesSql.Sql;
 
@@ -23,7 +23,8 @@ namespace YesSql.Samples.Performance
         private async Task InitializeAsync()
         {
             var configuration = new Configuration()
-                    .UseSqlServer(@"Data Source =.; Initial Catalog = yessql; Integrated Security = True")
+                    .UsePostgresJson(@"Server=postgres;Port=5432;Database=yessql;User Id=vendallion;Password=vendallionpwd;")
+                    .UseBlockIdGenerator()
                     .SetTablePrefix("Performance");
             
             try

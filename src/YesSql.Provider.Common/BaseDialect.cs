@@ -212,5 +212,10 @@ namespace YesSql.Provider
 
             return select;
         }
+
+        public virtual string TransformedContentProperty()
+        {
+            return "@Content";
+        }
     }
 }

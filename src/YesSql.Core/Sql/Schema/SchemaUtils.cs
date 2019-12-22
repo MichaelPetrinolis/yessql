@@ -8,7 +8,7 @@ namespace YesSql.Sql.Schema
     {
         private static Dictionary<Type, DbType> DbTypes = new Dictionary<Type, DbType>
         {
-            { typeof(object), DbType.Binary },
+            { typeof(object), DbType.Object },
             { typeof(byte[]), DbType.Binary },
             { typeof(string), DbType.String },
             { typeof(char), DbType.String },

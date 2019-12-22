@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using YesSql.Sql;
 
-namespace YesSql.Provider.PostgreSql
+namespace YesSql.Provider.PostgresJson
 {
-    public class PostgreSqlDialect : BaseDialect
+    public class PostgresJsonDialect : BaseDialect
     {
         private static Dictionary<DbType, string> ColumnTypes = new Dictionary<DbType, string>
         {
@@ -34,10 +34,10 @@ namespace YesSql.Provider.PostgreSql
             {DbType.StringFixedLength, "char(255)"},
             {DbType.String, "varchar(255)"},
             {DbType.Currency, "decimal(16,4)"},
-            {DbType.Object,"text"}
+            {DbType.Object,"jsonb"}
         };
 
-        public PostgreSqlDialect()
+        public PostgresJsonDialect()
         {
             Methods.Add("second", new TemplateFunction("extract(second from {0})"));
             Methods.Add("minute", new TemplateFunction("extract(minute from {0})"));
@@ -152,6 +152,11 @@ namespace YesSql.Provider.PostgreSql
                 default:
                     return base.GetSqlValue(value);
             }
+        }
+
+        public override string TransformedContentProperty()
+        {
+            return "@Content::jsonb";
         }
     }
 }
