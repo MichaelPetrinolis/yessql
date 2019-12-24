@@ -24,7 +24,7 @@ namespace YesSql.Commands
             var documentTable = CollectionHelper.Current.GetPrefixedName(Store.DocumentTable);
 
             var updateCmd = "update " + dialect.QuoteForTableName(_tablePrefix + documentTable)
-                + " set " + dialect.QuoteForColumnName("Content") + $" = {dialect.TransformedContentProperty()}, " + dialect.QuoteForColumnName("Version")  + " = @Version where "
+                + " set " + dialect.QuoteForColumnName("Content") + $" = {dialect.ContentParameterName()}, " + dialect.QuoteForColumnName("Version")  + " = @Version where "
                 + dialect.QuoteForColumnName("Id") + " = @Id "
                 + (_checkVersion > -1 ? " and " + dialect.QuoteForColumnName("Version") + " = " + dialect.GetSqlValue(_checkVersion) + ";" : ";")
                 ;

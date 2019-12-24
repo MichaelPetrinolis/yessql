@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
+using YesSql.Sql.Schema;
 
 namespace YesSql
 {
@@ -40,6 +41,6 @@ namespace YesSql
         void Page(ISqlBuilder sqlBuilder, string offset, string limit);
         ISqlBuilder CreateBuilder(string tablePrefix);
         string RenderMethod(string name, params string[] args);
-        string TransformedContentProperty();
+        string ContentParameterName();
     }
 }

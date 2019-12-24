@@ -4,6 +4,7 @@ using System.Data;
 using System.Globalization;
 using System.Text;
 using YesSql.Sql;
+using YesSql.Sql.Schema;
 
 namespace YesSql.Provider
 {
@@ -213,7 +214,7 @@ namespace YesSql.Provider
             return select;
         }
 
-        public virtual string TransformedContentProperty()
+        public virtual string ContentParameterName()
         {
             return "@Content";
         }

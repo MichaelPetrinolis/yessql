@@ -154,9 +154,10 @@ namespace YesSql.Provider.PostgresJson
             }
         }
 
-        public override string TransformedContentProperty()
+        public override string ContentParameterName()
         {
             return "@Content::jsonb";
         }
+
     }
 }
