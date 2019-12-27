@@ -15,6 +15,7 @@ namespace YesSql
         string NullColumnString { get; }
         bool SupportsUnique { get; }
         bool SupportsJson { get; }
+        string GetCreateViewFormatString(bool materialize);
 
         /// <summary>
         /// Returns whether the index names must be prefixed or not.
@@ -26,7 +27,8 @@ namespace YesSql
         string IdentitySelectString { get; }
         string GetTypeName(DbType dbType, int? length, byte precision, byte scale);
         string GetSqlValue(object value);
-        string QuoteForTableName(string v);
+        string QuoteForTableName(string tableName);
+        string QuoteForPropertyName(string propertyName);
         string GetDropTableString(string name);
         string GetDropIndexString(string indexName, string tableName);
         string QuoteForColumnName(string columnName);
@@ -43,5 +45,6 @@ namespace YesSql
         ISqlBuilder CreateBuilder(string tablePrefix);
         string RenderMethod(string name, params string[] args);
         string ContentParameterName();
+        string GetDocumentProperty(string documentProperty);
     }
 }

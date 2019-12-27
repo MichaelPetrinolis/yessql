@@ -5,9 +5,11 @@ namespace YesSql.Sql.Schema
 {
     public class CreateViewCommand : SchemaCommand, ICreateViewCommand
     {
-        public CreateViewCommand(string name)
+        public string SrcTableName { get; }
+        public CreateViewCommand(string name, string srcTableName)
             : base(name, SchemaCommandType.CreateView)
         {
+            SrcTableName = srcTableName;
         }
 
         public ICreateViewCommand Column(string columnName, string property)

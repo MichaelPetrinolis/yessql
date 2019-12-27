@@ -28,6 +28,12 @@ namespace YesSql.Commands
 
         public override async Task ExecuteAsync(DbConnection connection, DbTransaction transaction, ISqlDialect dialect, ILogger logger)
         {
+            if (dialect.SupportsJson)
+            {
+                return;
+            }
+
+
             var type = Index.GetType();
 
             var sql = Updates(type, dialect);

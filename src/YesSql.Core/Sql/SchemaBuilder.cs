@@ -60,14 +60,22 @@ namespace YesSql.Sql
 
                 if (Dialect.SupportsJson)
                 {
-                    var createView = new CreateMaterializedViewCommand(Prefix(name));
+                    var createView = new CreateMaterializedViewCommand(Prefix(name), Prefix("Document"));
                     foreach (var item in createTable.TableCommands)
                     {
                         if (item is ICreateColumnCommand)
                         {
-                            createView.Column(item.Name,item.Name);
+                            string columnName = ((ICreateColumnCommand)item).ColumnName;
+                            string property = columnName;
+                            if (columnName == "DocumentId")
+                            {
+                                property = "Id";
+                            }
+                            createView.Column(columnName, property);
                         }
                     }
+
+                    Execute(_builder.CreateSql(createView));
                 }
                 else
                 {

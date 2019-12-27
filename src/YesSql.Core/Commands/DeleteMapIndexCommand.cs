@@ -23,6 +23,11 @@ namespace YesSql.Commands
 
         public Task ExecuteAsync(DbConnection connection, DbTransaction transaction, ISqlDialect dialect, ILogger logger )
         {
+            if (dialect.SupportsJson)
+            {
+                return Task.CompletedTask;
+            }
+
             var command = "delete from " + dialect.QuoteForTableName(_tablePrefix + _indexType.Name) + " where " + dialect.QuoteForColumnName("DocumentId") + " = @Id";
             logger.LogTrace(command);
             return connection.ExecuteAsync(command, new { Id = _documentId }, transaction);

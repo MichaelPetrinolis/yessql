@@ -136,6 +136,11 @@ namespace YesSql.Provider.PostgreSql
             return QuoteString + columnName + QuoteString;
         }
 
+        public override string QuoteForPropertyName(string propertyName)
+        {
+            return SingleQuoteString + propertyName + SingleQuoteString;
+        }
+
         public override string QuoteForTableName(string tableName)
         {
             return QuoteString + tableName + QuoteString;
@@ -160,6 +165,19 @@ namespace YesSql.Provider.PostgreSql
         }
 
         public override string ContentParameterName() => SupportsJson ? "@Content::jsonb" : "@Content";
+
+        public override string GetDocumentProperty(string documentProperty)
+        {
+            var sb = new StringBuilder();
+            sb.Append(QuoteForColumnName("Content"));
+
+            foreach (var item in documentProperty.Split(new string[] { "." }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                sb.Append("->>").Append(QuoteForPropertyName(item));
+            }
+
+            return sb.ToString();
+        }
 
     }
 }

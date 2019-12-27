@@ -50,6 +50,10 @@ namespace YesSql.Sql
                     case SchemaCommandType.DropForeignKey:
                         sqlCommands.AddRange(Run((IDropForeignKeyCommand)schemaCommand));
                         break;
+                    case SchemaCommandType.CreateView:
+                        sqlCommands.AddRange(Run((ICreateViewCommand)schemaCommand));
+                        break;
+
                 }
             }
 
@@ -293,5 +297,48 @@ namespace YesSql.Sql
                 builder.Append(" unique");
             }
         }
+
+        private void Run(StringBuilder builder, IViewColumnCommand command)
+        {
+            string documentProperty;
+            if (command.ColumnName == "Id" || command.ColumnName == "DocumentId")
+            {
+                documentProperty = _dialect.QuoteForColumnName(command.DocumentProperty);
+            }
+            else
+            {
+                documentProperty = _dialect.GetDocumentProperty(command.DocumentProperty);
+            }
+
+            builder.Append(documentProperty)
+                .Append(" as ").Append(_dialect.QuoteForColumnName(command.ColumnName))
+                .Append(Space);
+        }
+
+
+        public virtual IEnumerable<string> Run(ICreateViewCommand command)
+        {
+            var builder = new StringBuilder();
+
+            builder.AppendFormat(_dialect.GetCreateViewFormatString(command is ICreateMaterializedViewCommand), _dialect.QuoteForTableName(command.Name))
+                .Append(" select ");
+
+            var appendComma = false;
+            foreach (var createColumn in command.TableCommands.OfType<IViewColumnCommand>())
+            {
+                if (appendComma)
+                {
+                    builder.Append(", ");
+                }
+                appendComma = true;
+
+                Run(builder, createColumn);
+            }
+
+            builder.Append(" from ").Append(_dialect.QuoteForTableName(command.SrcTableName));
+
+            yield return builder.ToString();
+        }
+
     }
 }

@@ -55,7 +55,7 @@ namespace YesSql.Provider
         public virtual bool SupportsIdentityColumns => true;
 
         public virtual bool SupportsUnique => true;
-        
+
         public virtual bool SupportsJson => false;
 
         public virtual bool SupportsForeignKeyConstraintInAlterTable => true;
@@ -114,7 +114,7 @@ namespace YesSql.Provider
         public abstract string GetDropIndexString(string indexName, string tableName);
         public abstract string QuoteForColumnName(string columnName);
         public abstract string QuoteForTableName(string tableName);
-
+        public virtual string QuoteForPropertyName(string propertyName) { return propertyName; }
         public virtual string QuoteString => "\"";
         public virtual string DoubleQuoteString => "\"\"";
         public virtual string SingleQuoteString => "'";
@@ -219,6 +219,23 @@ namespace YesSql.Provider
         public virtual string ContentParameterName()
         {
             return "@Content";
+        }
+
+        public virtual string GetCreateViewFormatString(bool materialize)
+        {
+            if (materialize)
+            {
+                return "create materialized view {0} as ";
+            }
+            else
+            {
+                return "create view {0} as ";
+            }
+        }
+
+        public virtual string GetDocumentProperty(string documentProperty)
+        {
+            return documentProperty;
         }
     }
 }
