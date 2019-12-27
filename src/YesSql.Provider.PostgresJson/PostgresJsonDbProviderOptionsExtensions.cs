@@ -6,9 +6,9 @@ namespace YesSql.Provider.PostgresJson
 {
     public static class PostgresJsonDbProviderOptionsExtensions
     {
-        public static IConfiguration RegisterPostgresJson(this IConfiguration configuration)
+        public static IConfiguration RegisterPostgresJson(this IConfiguration configuration,bool useJsonb = false)
         {
-            SqlDialectFactory.SqlDialects["npgsqlconnection"] = new PostgresJsonDialect();
+            SqlDialectFactory.SqlDialects["npgsqlconnection"] = new PostgresJsonDialect(useJsonb);
             CommandInterpreterFactory.CommandInterpreters["npgsqlconnection"] = d => new PostgresJsonCommandInterpreter(d);
 
             return configuration;
@@ -18,13 +18,14 @@ namespace YesSql.Provider.PostgresJson
             this IConfiguration configuration,
             string connectionString)
         {
-            return UsePostgresJson(configuration, connectionString, IsolationLevel.ReadUncommitted);
+            return UsePostgresJson(configuration, connectionString, IsolationLevel.ReadUncommitted,false);
         }
 
         public static IConfiguration UsePostgresJson(
             this IConfiguration configuration,
             string connectionString,
-            IsolationLevel isolationLevel)
+            IsolationLevel isolationLevel,
+            bool useJsonb)
         {
             if (configuration == null)
             {

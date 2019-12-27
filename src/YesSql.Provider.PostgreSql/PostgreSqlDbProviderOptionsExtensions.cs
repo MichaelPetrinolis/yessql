@@ -6,9 +6,9 @@ namespace YesSql.Provider.PostgreSql
 {
     public static class PostgreSqlDbProviderOptionsExtensions
     {
-        public static IConfiguration RegisterPostgreSql(this IConfiguration configuration)
+        public static IConfiguration RegisterPostgreSql(this IConfiguration configuration, bool useJson = false)
         {
-            SqlDialectFactory.SqlDialects["npgsqlconnection"] = new PostgreSqlDialect();
+            SqlDialectFactory.SqlDialects["npgsqlconnection"] = new PostgreSqlDialect(useJson);
             CommandInterpreterFactory.CommandInterpreters["npgsqlconnection"] = d => new PostgreSqlCommandInterpreter(d);
 
             return configuration;
@@ -16,15 +16,17 @@ namespace YesSql.Provider.PostgreSql
 
         public static IConfiguration UsePostgreSql(
             this IConfiguration configuration,
-            string connectionString)
+            string connectionString,
+            bool useJson = false)
         {
-            return UsePostgreSql(configuration, connectionString, IsolationLevel.ReadUncommitted);
+            return UsePostgreSql(configuration, connectionString, IsolationLevel.ReadUncommitted, useJson);
         }
 
         public static IConfiguration UsePostgreSql(
             this IConfiguration configuration,
             string connectionString,
-            IsolationLevel isolationLevel)
+            IsolationLevel isolationLevel,
+            bool useJson = false)
         {
             if (configuration == null)
             {
@@ -36,7 +38,7 @@ namespace YesSql.Provider.PostgreSql
                 throw new ArgumentException(nameof(connectionString));
             }
 
-            RegisterPostgreSql(configuration);
+            RegisterPostgreSql(configuration, useJson);
             configuration.ConnectionFactory = new DbConnectionFactory<NpgsqlConnection>(connectionString);
             configuration.IsolationLevel = isolationLevel;
 

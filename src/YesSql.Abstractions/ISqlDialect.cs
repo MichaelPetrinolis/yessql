@@ -14,6 +14,7 @@ namespace YesSql
         string PrimaryKeyString { get; }
         string NullColumnString { get; }
         bool SupportsUnique { get; }
+        bool SupportsJson { get; }
 
         /// <summary>
         /// Returns whether the index names must be prefixed or not.

@@ -57,9 +57,24 @@ namespace YesSql.Sql
                     .Column<int>("DocumentId");
 
                 table(createTable);
-                Execute(_builder.CreateSql(createTable));
 
-                CreateForeignKey("FK_" + name, name, new[] { "DocumentId" }, documentTable, new[] { "Id" });
+                if (Dialect.SupportsJson)
+                {
+                    var createView = new CreateMaterializedViewCommand(Prefix(name));
+                    foreach (var item in createTable.TableCommands)
+                    {
+                        if (item is ICreateColumnCommand)
+                        {
+                            createView.Column(item.Name,item.Name);
+                        }
+                    }
+                }
+                else
+                {
+                    Execute(_builder.CreateSql(createTable));
+
+                    CreateForeignKey("FK_" + name, name, new[] { "DocumentId" }, documentTable, new[] { "Id" });
+                }
             }
             catch
             {

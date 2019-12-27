@@ -34,10 +34,11 @@ namespace YesSql.Provider.PostgresJson
             {DbType.StringFixedLength, "char(255)"},
             {DbType.String, "varchar(255)"},
             {DbType.Currency, "decimal(16,4)"},
-            {DbType.Object,"jsonb"}
+            {DbType.Object,"text"}
         };
 
-        public PostgresJsonDialect()
+        private bool _useJson = false;
+        public PostgresJsonDialect(bool useJson = false)
         {
             Methods.Add("second", new TemplateFunction("extract(second from {0})"));
             Methods.Add("minute", new TemplateFunction("extract(minute from {0})"));
@@ -45,6 +46,9 @@ namespace YesSql.Provider.PostgresJson
             Methods.Add("day", new TemplateFunction("extract(day from {0})"));
             Methods.Add("month", new TemplateFunction("extract(month from {0})"));
             Methods.Add("year", new TemplateFunction("extract(year from {0})"));
+            _useJson = useJson;
+            if (_useJson)
+                ColumnTypes[DbType.Object] = "jsonb";
         }
 
         public override string Name => "PostgreSql";
@@ -53,6 +57,7 @@ namespace YesSql.Provider.PostgresJson
         public override string IdentitySelectString => "RETURNING";
         public override string IdentityColumnString => "SERIAL PRIMARY KEY";
         public override bool SupportsIfExistsBeforeTableName => true;
+        public override bool SupportsJson => _useJson;
         public override bool PrefixIndex => true;
 
         public override string GetTypeName(DbType dbType, int? length, byte precision, byte scale)
@@ -156,7 +161,7 @@ namespace YesSql.Provider.PostgresJson
 
         public override string ContentParameterName()
         {
-            return "@Content::jsonb";
+            return SupportsJson ? "@Content::jsonb" : "@Content";
         }
 
     }

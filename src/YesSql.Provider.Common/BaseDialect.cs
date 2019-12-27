@@ -55,6 +55,8 @@ namespace YesSql.Provider
         public virtual bool SupportsIdentityColumns => true;
 
         public virtual bool SupportsUnique => true;
+        
+        public virtual bool SupportsJson => false;
 
         public virtual bool SupportsForeignKeyConstraintInAlterTable => true;
 
