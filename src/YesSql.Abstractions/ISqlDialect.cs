@@ -25,6 +25,7 @@ namespace YesSql
         bool SupportsIdentityColumns { get; }
         string IdentityColumnString { get; }
         string IdentitySelectString { get; }
+        string CastAsType(string property, DbType dbType, int? length, byte precision, byte scale);
         string GetTypeName(DbType dbType, int? length, byte precision, byte scale);
         string GetSqlValue(object value);
         string QuoteForTableName(string tableName);

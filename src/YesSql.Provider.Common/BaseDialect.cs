@@ -129,6 +129,11 @@ namespace YesSql.Provider
             return SingleQuoteString + value.Replace(SingleQuoteString, DoubleSingleQuoteString) + SingleQuoteString;
         }
 
+        public virtual string CastAsType(string property, DbType dbType, int? length, byte precision, byte scale)
+        {
+            return string.Format("CAST({0} AS {1})", property, GetTypeName(dbType, length, precision, scale));
+        }
+
         public abstract string GetTypeName(DbType dbType, int? length, byte precision, byte scale);
 
         public virtual string GetSqlValue(object value)

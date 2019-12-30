@@ -312,7 +312,7 @@ namespace YesSql.Sql
                 documentProperty = _dialect.GetDocumentProperty(command.DocumentProperty);
             }
 
-            builder.Append(documentProperty)
+            builder.Append(_dialect.CastAsType(documentProperty, command.DbType, command.Length, command.Precision, command.Scale))
                 .Append(" as ").Append(_dialect.QuoteForColumnName(command.ColumnName))
                 .Append(Space);
         }

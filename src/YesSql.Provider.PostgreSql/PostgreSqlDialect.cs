@@ -59,7 +59,10 @@ namespace YesSql.Provider.PostgreSql
         public override bool SupportsIfExistsBeforeTableName => true;
         public override bool PrefixIndex => true;
         public override bool SupportsJson => _useJson;
-
+        public override string CastAsType(string property, DbType dbType, int? length, byte precision, byte scale)
+        {
+            return string.Format("({0})::{1}", property, GetTypeName(dbType, length, precision, scale));
+        }
         public override string GetTypeName(DbType dbType, int? length, byte precision, byte scale)
         {
             if (length.HasValue)
