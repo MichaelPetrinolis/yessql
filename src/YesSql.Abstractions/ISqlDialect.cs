@@ -46,5 +46,6 @@ namespace YesSql
         string RenderMethod(string name, params string[] args);
         string ContentParameterName();
         string GetDocumentProperty(string documentProperty);
+        string GetDropViewString(bool materialized, string name);
     }
 }

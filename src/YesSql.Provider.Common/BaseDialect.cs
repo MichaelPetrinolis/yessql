@@ -237,5 +237,30 @@ namespace YesSql.Provider
         {
             return documentProperty;
         }
+
+        public virtual string GetDropViewString(bool materialized,string name)
+        {
+            var sb = new StringBuilder("drop ");
+            if (materialized)
+            {
+                sb.Append("materialized ");
+            }
+            sb.Append("view ");
+
+            if (SupportsIfExistsBeforeTableName)
+            {
+                sb.Append("if exists ");
+            }
+
+            sb.Append(QuoteForTableName(name)).Append(CascadeConstraintsString);
+
+            if (SupportsIfExistsAfterTableName)
+            {
+                sb.Append(" if exists");
+            }
+
+            return sb.ToString();
+        }
+
     }
 }

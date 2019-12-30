@@ -53,7 +53,9 @@ namespace YesSql.Sql
                     case SchemaCommandType.CreateView:
                         sqlCommands.AddRange(Run((ICreateViewCommand)schemaCommand));
                         break;
-
+                    case SchemaCommandType.DropView:
+                        sqlCommands.AddRange(Run((IDropViewCommand)schemaCommand));
+                        break;
                 }
             }
 
@@ -320,7 +322,7 @@ namespace YesSql.Sql
         {
             var builder = new StringBuilder();
 
-            builder.AppendFormat(_dialect.GetCreateViewFormatString(command is ICreateMaterializedViewCommand), _dialect.QuoteForTableName(command.Name))
+            builder.AppendFormat(_dialect.GetCreateViewFormatString(false), _dialect.QuoteForTableName(command.Name))
                 .Append(" select ");
 
             var appendComma = false;
@@ -337,6 +339,14 @@ namespace YesSql.Sql
 
             builder.Append(" from ").Append(_dialect.QuoteForTableName(command.SrcTableName));
 
+            yield return builder.ToString();
+        }
+
+        public virtual IEnumerable<string> Run(IDropViewCommand command)
+        {
+            var builder = new StringBuilder();
+
+            builder.Append(_dialect.GetDropViewString(false, command.Name));
             yield return builder.ToString();
         }
 

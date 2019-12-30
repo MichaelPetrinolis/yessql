@@ -23,5 +23,6 @@ namespace YesSql.Sql
         ISchemaBuilder DropMapIndexTable(string name);
         ISchemaBuilder DropReduceIndexTable(string name);
         ISchemaBuilder DropTable(string name);
+        ISchemaBuilder DropView(string name);
     }
 }

@@ -12,11 +12,12 @@ namespace YesSql.Sql.Schema
             SrcTableName = srcTableName;
         }
 
-        public ICreateViewCommand Column(string columnName, string property)
+        public ICreateViewCommand Column(string columnName, string property, DbType dbType,byte precision,byte scale,int? length)
         {
-            var command = new ViewColumnCommand(Name, columnName, property);
+            var command = new ViewColumnCommand(Name, columnName, property, dbType,precision,scale,length);
             TableCommands.Add(command);
             return this;
         }
+
     }
 }

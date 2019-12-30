@@ -30,6 +30,9 @@ namespace YesSql.Tests
 
             CleanDatabase(configuration, false);
             CreateTables(configuration);
+
+            _store = StoreFactory.CreateAsync(configuration).GetAwaiter().GetResult();
+            _store.TypeNames[typeof(Person)] = "People";
         }
 
         public void Dispose()
@@ -885,7 +888,7 @@ namespace YesSql.Tests
             {
                 var results = new List<Person>();
 
-                await foreach(var person in session.ExecuteQuery(new PersonByNameOrAgeQuery(12, null)).ToAsyncEnumerable())
+                await foreach (var person in session.ExecuteQuery(new PersonByNameOrAgeQuery(12, null)).ToAsyncEnumerable())
                 {
                     results.Add(person);
                 }
@@ -1361,7 +1364,7 @@ namespace YesSql.Tests
             //Create one Email with 3 attachments
             using (var session = _store.CreateSession())
             {
-                var email = new Email() { Date = new DateTime(2018, 06, 11), Attachments = new System.Collections.Generic.List<Attachment>(){ new Attachment("A1"), new Attachment("A2"), new Attachment("A3") }};
+                var email = new Email() { Date = new DateTime(2018, 06, 11), Attachments = new System.Collections.Generic.List<Attachment>() { new Attachment("A1"), new Attachment("A2"), new Attachment("A3") } };
                 session.Save(email);
             }
 
@@ -1883,16 +1886,17 @@ namespace YesSql.Tests
         public async Task CanCountThenListOrdered()
         {
             _store.RegisterIndexes<PersonAgeIndexProvider>();
-
+            var items = 100000;
             using (var session = _store.CreateSession())
             {
-                for (var i = 0; i < 100; i++)
+                var random = new Random();
+                for (var i = 0; i < items; i++)
                 {
                     var person = new Person
                     {
                         Firstname = "Bill" + i,
                         Lastname = "Gates" + i,
-                        Age = i
+                        Age = random.Next(1, 100)
                     };
 
                     session.Save(person);
@@ -1903,8 +1907,8 @@ namespace YesSql.Tests
             {
                 var query = session.QueryIndex<PersonByAge>().OrderBy(x => x.Age);
 
-                Assert.Equal(100, await query.CountAsync());
-                Assert.Equal(100, (await query.ListAsync()).Count());
+                Assert.Equal(items, await query.CountAsync());
+                Assert.Equal(items, (await query.ListAsync()).Count());
             }
         }
 
@@ -3844,7 +3848,7 @@ namespace YesSql.Tests
                     }
 
                     person.Lastname = "Gates";
-                    
+
                     session.Save(person, true);
                     Assert.NotNull(person);
                 }

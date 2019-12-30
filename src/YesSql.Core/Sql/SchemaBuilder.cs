@@ -60,18 +60,19 @@ namespace YesSql.Sql
 
                 if (Dialect.SupportsJson)
                 {
-                    var createView = new CreateMaterializedViewCommand(Prefix(name), Prefix("Document"));
+                    var createView = new CreateViewCommand(Prefix(name), Prefix("Document"));
                     foreach (var item in createTable.TableCommands)
                     {
-                        if (item is ICreateColumnCommand)
+                        var createColumnCommand = item as ICreateColumnCommand;
+                        if (createColumnCommand != null)
                         {
-                            string columnName = ((ICreateColumnCommand)item).ColumnName;
+                            string columnName = createColumnCommand.ColumnName;
                             string property = columnName;
                             if (columnName == "DocumentId")
                             {
                                 property = "Id";
                             }
-                            createView.Column(columnName, property);
+                            createView.Column(columnName, property, createColumnCommand.DbType, createColumnCommand.Precision, createColumnCommand.Scale, createColumnCommand.Length);
                         }
                     }
 
@@ -104,8 +105,7 @@ namespace YesSql.Sql
                 var documentTable = collection.GetPrefixedName(Store.DocumentTable);
 
                 createTable
-                    .Column<int>("Id", column => column.Identity().NotNull())
-                    ;
+                    .Column<int>("Id", column => column.Identity().NotNull());
 
                 table(createTable);
                 Execute(_builder.CreateSql(createTable));
@@ -164,12 +164,19 @@ namespace YesSql.Sql
         {
             try
             {
-                if (String.IsNullOrEmpty(Dialect.CascadeConstraintsString))
+                if (Dialect.SupportsJson)
                 {
-                    DropForeignKey(name, "FK_" + name);
+                    DropView(name);
                 }
+                else
+                {
+                    if (String.IsNullOrEmpty(Dialect.CascadeConstraintsString))
+                    {
+                        DropForeignKey(name, "FK_" + name);
+                    }
 
-                DropTable(name);
+                    DropTable(name);
+                }
             }
             catch
             {
@@ -226,6 +233,24 @@ namespace YesSql.Sql
             {
                 var deleteTable = new DropTableCommand(Prefix(name));
                 Execute(_builder.CreateSql(deleteTable));
+            }
+            catch
+            {
+                if (ThrowOnError)
+                {
+                    throw;
+                }
+            }
+
+            return this;
+        }
+
+        public ISchemaBuilder DropView(string name)
+        {
+            try
+            {
+                var deleteView = new DropViewCommand(Prefix(name));
+                Execute(_builder.CreateSql(deleteView));
             }
             catch
             {
