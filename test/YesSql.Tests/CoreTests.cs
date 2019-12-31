@@ -28,8 +28,8 @@ namespace YesSql.Tests
         {
             var configuration = CreateConfiguration();
 
-            CleanDatabase(configuration, false);
-            CreateTables(configuration);
+            //CleanDatabase(configuration, false);
+            //CreateTables(configuration);
 
             _store = StoreFactory.CreateAsync(configuration).GetAwaiter().GetResult();
             _store.TypeNames[typeof(Person)] = "People";
@@ -1886,7 +1886,7 @@ namespace YesSql.Tests
         public async Task CanCountThenListOrdered()
         {
             _store.RegisterIndexes<PersonAgeIndexProvider>();
-            var items = 100000;
+            var items = 10000;
             using (var session = _store.CreateSession())
             {
                 var random = new Random();
