@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 
 namespace YesSql.Sql.Schema
 {
@@ -11,6 +11,8 @@ namespace YesSql.Sql.Schema
         bool IsPrimaryKey { get; }
 
         bool IsIdentity { get; }
+
+        string DocumentProperty { get; }
 
         ICreateColumnCommand PrimaryKey();
 
@@ -27,5 +29,7 @@ namespace YesSql.Sql.Schema
         ICreateColumnCommand Unique();
 
         ICreateColumnCommand NotUnique();
+
+        ICreateColumnCommand ForDocumentProperty(string documentProperty);
     }
 }

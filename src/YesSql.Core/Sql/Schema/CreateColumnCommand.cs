@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 
 namespace YesSql.Sql.Schema
 {
@@ -6,6 +6,7 @@ namespace YesSql.Sql.Schema
     {
         public CreateColumnCommand(string tableName, string name) : base(tableName, name)
         {
+            DocumentProperty = name;
             IsNotNull = false;
             IsUnique = false;
         }
@@ -17,6 +18,8 @@ namespace YesSql.Sql.Schema
         public bool IsPrimaryKey { get; protected set; }
 
         public bool IsIdentity { get; protected set; }
+
+        public string DocumentProperty { get; private set; }
 
         public ICreateColumnCommand PrimaryKey()
         {
@@ -90,6 +93,12 @@ namespace YesSql.Sql.Schema
         public new ICreateColumnCommand WithDefault(object @default)
         {
             base.WithDefault(@default);
+            return this;
+        }
+
+        public ICreateColumnCommand ForDocumentProperty(string documentProperty)
+        {
+            DocumentProperty = documentProperty;
             return this;
         }
     }

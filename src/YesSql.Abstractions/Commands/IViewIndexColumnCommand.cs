@@ -2,7 +2,7 @@ using System.Data;
 
 namespace YesSql.Sql.Schema
 {
-    public interface IViewColumnCommand : IViewCommand
+    public interface IViewIndexColumnCommand : IViewCommand
     {
 
         string ColumnName { get; }
@@ -14,7 +14,5 @@ namespace YesSql.Sql.Schema
         byte Precision { get; }
 
         int? Length { get; }
-
-        string DocumentProperty { get; }
     }
 }

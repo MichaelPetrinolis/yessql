@@ -1,8 +1,8 @@
-﻿namespace YesSql.Sql.Schema
+namespace YesSql.Sql.Schema
 {
     public interface IAddIndexCommand : ITableCommand
     {
-        string IndexName { get; set; }
+        string IndexName { get; }
         string[] ColumnNames { get; }
     }
 }

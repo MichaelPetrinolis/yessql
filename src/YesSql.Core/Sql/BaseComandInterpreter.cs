@@ -305,7 +305,7 @@ namespace YesSql.Sql
             string documentProperty;
             if (command.ColumnName == "Id" || command.ColumnName == "DocumentId")
             {
-                documentProperty = _dialect.QuoteForColumnName(command.DocumentProperty);
+                documentProperty = _dialect.QuoteForColumnName("Id");
             }
             else
             {
@@ -314,6 +314,14 @@ namespace YesSql.Sql
 
             builder.Append(_dialect.CastAsType(documentProperty, command.DbType, command.Length, command.Precision, command.Scale))
                 .Append(" as ").Append(_dialect.QuoteForColumnName(command.ColumnName))
+                .Append(Space);
+        }
+
+        private void Run(StringBuilder builder, IViewIndexColumnCommand command)
+        {
+            var documentProperty = _dialect.GetDocumentProperty(command.ColumnName);
+
+            builder.AppendFormat("({0})", _dialect.CastAsType(documentProperty, command.DbType, command.Length, command.Precision, command.Scale))
                 .Append(Space);
         }
 
@@ -339,7 +347,22 @@ namespace YesSql.Sql
 
             builder.Append(" from ").Append(_dialect.QuoteForTableName(command.SrcTableName));
 
+            if (!string.IsNullOrWhiteSpace(command.DocumentType))
+            {
+                builder.Append(" where ").Append(_dialect.QuoteForColumnName("Type")).Append(" = ").Append(_dialect.GetSqlValue(command.DocumentType));
+            }
+
             yield return builder.ToString();
+
+            foreach (var addIndex in command.TableCommands.OfType<IAddViewIndexCommand>())
+            {
+                builder = new StringBuilder();
+
+                Run(builder, addIndex);
+
+                yield return builder.ToString();
+            }
+
         }
 
         public virtual IEnumerable<string> Run(IDropViewCommand command)
@@ -348,6 +371,33 @@ namespace YesSql.Sql
 
             builder.Append(_dialect.GetDropViewString(false, command.Name));
             yield return builder.ToString();
+        }
+
+        public virtual void Run(StringBuilder builder, IAddViewIndexCommand command)
+        {
+
+            builder.AppendFormat("create index {1} on {0} ( ",
+                _dialect.QuoteForTableName(command.Name),
+                _dialect.QuoteForColumnName(command.IndexName));
+
+            var appendComma = false;
+            foreach (var column in command.Columns)
+            {
+                if (appendComma)
+                {
+                    builder.Append(", ");
+                }
+                appendComma = true;
+
+                Run(builder, column);
+            }
+
+            builder.Append(" ) ");
+
+            if (!string.IsNullOrWhiteSpace(command.DocumentType))
+            {
+                builder.Append(") where ").Append(_dialect.QuoteForColumnName("Type")).Append(" = ").Append(_dialect.GetSqlValue(command.DocumentType));
+            }
         }
 
     }

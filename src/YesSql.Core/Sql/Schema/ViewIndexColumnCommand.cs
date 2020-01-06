@@ -3,11 +3,9 @@ using System.Data;
 
 namespace YesSql.Sql.Schema
 {
-    public class ViewColumnCommand : ViewCommand, IViewColumnCommand
+    public class ViewIndexColumnCommand : ViewCommand, IViewIndexColumnCommand
     {
         public string ColumnName { get; }
-
-        public string DocumentProperty { get; }
 
         public DbType DbType { get; }
 
@@ -17,11 +15,10 @@ namespace YesSql.Sql.Schema
 
         public int? Length { get; }
 
-        public ViewColumnCommand(string tableName, string name, string property, DbType dbType, byte precision, byte scale, int? length)
+        public ViewIndexColumnCommand(string tableName, string name, DbType dbType, byte precision, byte scale, int? length)
             : base(tableName)
         {
             ColumnName = name;
-            DocumentProperty = property;
             DbType = dbType;
             Precision = precision;
             Scale = scale;

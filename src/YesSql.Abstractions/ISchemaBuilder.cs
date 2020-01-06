@@ -17,6 +17,7 @@ namespace YesSql.Sql
         ISchemaBuilder CreateForeignKey(string name, string srcTable, string[] srcColumns, string destModule, string destTable, string[] destColumns);
         ISchemaBuilder CreateForeignKey(string name, string srcTable, string[] srcColumns, string destTable, string[] destColumns);
         ISchemaBuilder CreateMapIndexTable(string name, Action<ICreateTableCommand> table);
+        ISchemaBuilder CreateMapIndexTable(string name, string documentType, Action<ICreateTableCommand> table);
         ISchemaBuilder CreateReduceIndexTable(string name, Action<ICreateTableCommand> table);
         ISchemaBuilder CreateTable(string name, Action<ICreateTableCommand> table);
         ISchemaBuilder DropForeignKey(string srcTable, string name);

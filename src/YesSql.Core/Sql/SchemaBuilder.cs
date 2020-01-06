@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Linq;
 using YesSql.Collections;
 using YesSql.Sql.Schema;
 
@@ -46,6 +47,11 @@ namespace YesSql.Sql
 
         public ISchemaBuilder CreateMapIndexTable(string name, Action<ICreateTableCommand> table)
         {
+            return CreateMapIndexTable(name, null, table);
+        }
+
+        public ISchemaBuilder CreateMapIndexTable(string name, string documentType, Action<ICreateTableCommand> table)
+        {
             try
             {
                 var createTable = new CreateTableCommand(Prefix(name));
@@ -60,14 +66,14 @@ namespace YesSql.Sql
 
                 if (Dialect.SupportsJson)
                 {
-                    var createView = new CreateViewCommand(Prefix(name), Prefix("Document"));
+                    var createView = new CreateViewCommand(Prefix(name), Prefix("Document"), documentType);
                     foreach (var item in createTable.TableCommands)
                     {
                         var createColumnCommand = item as ICreateColumnCommand;
                         if (createColumnCommand != null)
                         {
                             string columnName = createColumnCommand.ColumnName;
-                            string property = columnName;
+                            string property = createColumnCommand.DocumentProperty;
                             if (columnName == "DocumentId")
                             {
                                 property = "Id";
@@ -75,13 +81,18 @@ namespace YesSql.Sql
                             createView.Column(columnName, property, createColumnCommand.DbType, createColumnCommand.Precision, createColumnCommand.Scale, createColumnCommand.Length);
                         }
                     }
+                    string indexName = "IX_" + (Dialect.PrefixIndex ? TablePrefix + name : name);
+                    var indexColumns = createView.TableCommands.OfType<IViewColumnCommand>()
+                        .Where(c => c.DocumentProperty != "Id" && c.DocumentProperty != "DocumentId")
+                        .Select(c => new ViewIndexColumnCommand(name, c.ColumnName, c.DbType, c.Precision, c.Scale, c.Length))
+                        .ToArray();
 
+                    createView.AddIndex(indexName, documentType, indexColumns);
                     Execute(_builder.CreateSql(createView));
                 }
                 else
                 {
                     Execute(_builder.CreateSql(createTable));
-
                     CreateForeignKey("FK_" + name, name, new[] { "DocumentId" }, documentTable, new[] { "Id" });
                 }
             }
