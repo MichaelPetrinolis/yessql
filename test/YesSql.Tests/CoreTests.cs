@@ -115,16 +115,13 @@ namespace YesSql.Tests
                         );
 
                     builder.CreateMapIndexTable(nameof(ArticleByPublishedDate), column => column
-                            .Column<DateTime>(nameof(ArticleByPublishedDate.PublishedDateTime))
+                            .Column<DateTime>(nameof(ArticleByPublishedDate.PublishedDateTime),c=>c.ForDocumentProperty("PublishedUtc"))
                             .Column<string>(nameof(ArticleByPublishedDate.Title))
                         );
 
                     builder.CreateMapIndexTable(nameof(PersonByName), "People", column => column
                              .Column<string>(nameof(PersonByName.SomeName), c => c.ForDocumentProperty(nameof(Person.Firstname)))
                         );
-
-                    builder.AlterTable(nameof(PersonByName), table => table
-                             .CreateIndex("IDX_PersonByName_SomeName", "SomeName"));
 
                     builder.CreateMapIndexTable(nameof(PersonIdentity), "People", column => column
                              .Column<string>(nameof(PersonIdentity.Identity))

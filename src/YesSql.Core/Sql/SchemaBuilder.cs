@@ -86,8 +86,10 @@ namespace YesSql.Sql
                         .Where(c => c.DocumentProperty != "Id" && c.DocumentProperty != "DocumentId")
                         .Select(c => new ViewIndexColumnCommand(name, c.ColumnName, c.DbType, c.Precision, c.Scale, c.Length))
                         .ToArray();
-
-                    createView.AddIndex(indexName, documentType, indexColumns);
+                    if (indexColumns.Any())
+                    {
+                        createView.AddIndex(indexName, documentType, indexColumns);
+                    }
                     Execute(_builder.CreateSql(createView));
                 }
                 else

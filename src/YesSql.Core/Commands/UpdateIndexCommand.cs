@@ -28,17 +28,15 @@ namespace YesSql.Commands
 
         public override async Task ExecuteAsync(DbConnection connection, DbTransaction transaction, ISqlDialect dialect, ILogger logger)
         {
-            if (dialect.SupportsJson && Index is MapIndex)
-            {
-                return;
-            }
-
-
             var type = Index.GetType();
 
             var sql = Updates(type, dialect);
-            logger.LogTrace(sql);
-            await connection.ExecuteAsync(sql, Index, transaction);
+
+            if (!dialect.SupportsJson)
+            {
+                logger.LogTrace(sql);
+                await connection.ExecuteAsync(sql, Index, transaction);
+            }
 
             // Update the documents list
             if (Index is ReduceIndex reduceIndex)

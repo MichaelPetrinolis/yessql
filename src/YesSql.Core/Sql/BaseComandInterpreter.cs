@@ -396,7 +396,7 @@ namespace YesSql.Sql
 
             if (!string.IsNullOrWhiteSpace(command.DocumentType))
             {
-                builder.Append(") where ").Append(_dialect.QuoteForColumnName("Type")).Append(" = ").Append(_dialect.GetSqlValue(command.DocumentType));
+                builder.Append(" where ").Append(_dialect.QuoteForColumnName("Type")).Append(" = ").Append(_dialect.GetSqlValue(command.DocumentType));
             }
         }
 
