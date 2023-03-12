@@ -45,7 +45,7 @@ namespace YesSql.Tests
             if (_configuration == null)
             {
                 _configuration = CreateConfiguration();
-                
+
                 CleanDatabase(_configuration, false);
 
                 _store = await StoreFactory.CreateAndInitializeAsync(_configuration);
@@ -540,6 +540,8 @@ namespace YesSql.Tests
 
                 bill.Lastname = "Gates";
 
+                bill.Age = 50;
+
                 session.Save(bill);
                 await session.SaveChangesAsync();
             }
@@ -553,6 +555,98 @@ namespace YesSql.Tests
                 Assert.Equal("Gates", person.Lastname);
             }
         }
+
+        [Fact]
+        public async Task ShouldQueryDocumentIndex()
+        {
+            _store.RegisterIndexes<PersonIndexProvider>();
+
+            using (var session = _store.CreateSession())
+            {
+                var bill = new Person { Firstname = "Bill" };
+                session.Save(bill);
+                await session.SaveChangesAsync();
+            }
+
+            using (var session = _store.CreateSession())
+            {
+                var qry = session.Query().ForMaterializedIndex<Person, PersonByName>().With<PersonByName>(d => d.SomeName == "Bill");
+
+                var person = await qry.FirstOrDefaultAsync();
+
+                Assert.NotNull(person);
+                Assert.Equal("Bill", (string)person.SomeName);
+            }
+        }
+
+        [Fact]
+        public async Task ShouldQueryDocumentIndexForMultipleIndexes()
+        {
+            _store.RegisterIndexes<PersonIndexProvider>();
+            _store.RegisterIndexes<PersonAgeIndexProvider>();
+
+            using (var session = _store.CreateSession())
+            {
+
+                var bill = new Person
+                {
+                    Firstname = "Bill",
+                    Lastname = "Gates",
+                    Age = 55
+                };
+
+                var steve = new Person
+                {
+                    Firstname = "Steve",
+                    Lastname = "Balmer",
+                    Age = 54
+                };
+
+                var hanselman = new Person
+                {
+                    Firstname = "Scott",
+                    Lastname = "Hanselman",
+                    Age = 54
+                };
+
+                var guthrie = new Person
+                {
+                    Firstname = "Scott",
+                    Lastname = "Guthrie",
+                    Age = 50
+                };
+
+                session.Save(bill);
+                session.Save(steve);
+                session.Save(hanselman);
+                session.Save(guthrie);
+
+
+                await session.SaveChangesAsync();
+            }
+
+            using (var session = _store.CreateSession())
+            {
+                var qry = session.Query().ForMaterializedIndex<Person, PersonByName>()
+                .All(
+                    x => x.With<PersonByAge>(d => d.Age > 50),
+                    x => x.With<PersonByAge>(d => d.Age < 55),
+                    x => x.Any(
+                            x => x.With<PersonByName>(d => d.SomeName == "Steve"),
+                            x => x.With<PersonByName>(d => d.SomeName == "Bill"),
+                            x => x.With<PersonByName>(x => x.SomeName == "Scott"),
+                            x => x.With<PersonByAge>(x => x.Age < 51)
+                        )
+                );
+
+
+                var persons = await qry.ListAsync();
+
+                
+                Assert.NotNull(persons);
+            }
+        }
+
 
         [Fact]
         public async Task ShouldQueryIndexWithParameter()
@@ -574,6 +668,7 @@ namespace YesSql.Tests
                 Assert.Equal("Bill", (string)person.SomeName);
             }
         }
+
 
         [Fact]
         public async Task ShouldMapEnums()
